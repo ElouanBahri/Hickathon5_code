@@ -1,4 +1,37 @@
 import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+
+COLUMNS_TO_DROP = [
+    "piezo_station_department_name",
+    "piezo_station_commune_code_insee",
+    "piezo_station_bss_code",
+    "piezo_station_commune_name",
+    "piezo_bss_code",
+    "piezo_continuity_name",
+    "piezo_producer_code",
+    "piezo_producer_name",
+    "piezo_measure_nature_name",
+    "meteo_longitude",
+    "meteo_latitude",
+    "hydro_observation_date_elab",
+    "hydro_status_label",
+    "hydro_method_label",
+    "hydro_qualification_label",
+    "hydro_longitude",
+    "hydro_latitude",
+    "prelev_longitude_0",
+    "prelev_latitude_0",
+    "prelev_commune_code_insee_0",
+    "prelev_longitude_1",
+    "prelev_latitude_1",
+    "prelev_commune_code_insee_1",
+    "prelev_longitude_2",
+    "prelev_latitude_2",
+    "prelev_commune_code_insee_2",
+    "prelev_structure_code_2",            
+    "prelev_structure_code_1",
+    "prelev_structure_code_0"
+    ]
 
 
 def complete_nan_meteo(df: pd.DataFrame) -> pd.DataFrame:
@@ -205,3 +238,25 @@ def complete_nan_national(df: pd.DataFrame) -> pd.DataFrame:
         df[col] = df[col].fillna(mode_value)
     
     return df
+
+
+def pre_process_data(x_train):
+    
+    x_train = x_train.drop(columns=COLUMNS_TO_DROP)
+    threshold = 0.9  # 50% threshold
+    columns_to_drop = x_train.columns[x_train.isnull().mean() > threshold]
+
+    x_train_cleaned = x_train.drop(columns=columns_to_drop)
+    x_train_completed = complete_nan_meteo(x_train_cleaned)
+    x_train_completed_2 = complete_nan_prev(x_train_completed)
+    x_train_3 = create_region(x_train_completed_2)
+    x_train_4 = complete_nan_meteo_region(x_train_3)
+    x_train_5 = complete_nan_national(x_train_4)
+
+    y_train = x_train_5["piezo_groundwater_level_category"]
+    y_train_encoded = LabelEncoder().fit_transform(y_train)
+
+    x_train_5 = x_train_5.drop(columns=["piezo_groundwater_level_category"])
+    y_train_encoded = pd.DataFrame(y_train_encoded)
+    
+    return x_train_5, y_train_encoded
