@@ -398,7 +398,6 @@ def handle_corse_department(x):
         return float(x) if x.isdigit() else 0
     return x  # Return the value as-is if it's not a string
 
-
 def extract_date_features(df, date_column):
     """
     Extrait les caractéristiques de date (jour, mois, année) d'une colonne et nettoie le DataFrame.
