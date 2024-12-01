@@ -32,6 +32,7 @@ COLUMNS_TO_DROP = [
     "prelev_structure_code_1",
     "prelev_structure_code_0",
     "row_index",
+    "piezo_station_update_date",
 ]
 
 columns_to_transform = [
@@ -324,13 +325,14 @@ def pre_process_data(x_train):
     x_train_4 = complete_nan_meteo_region(x_train_3)
     x_train_5 = complete_nan_national(x_train_4)
 
+    y_train_original = x_train_5["piezo_groundwater_level_category"]
     y_train = x_train_5["piezo_groundwater_level_category"]
     y_train_encoded = LabelEncoder().fit_transform(y_train)
 
     x_train_5 = x_train_5.drop(columns=["piezo_groundwater_level_category"])
     y_train_encoded = pd.DataFrame(y_train_encoded)
 
-    return x_train_5, y_train_encoded
+    return x_train_5, y_train_encoded, y_train_original
 
 
 def transform_columns_to_ordinal(df, columns, mappings=None):
@@ -414,9 +416,9 @@ def extract_date_features(df, date_column):
     df["datetime"] = pd.to_datetime(df[date_column], errors="coerce")
 
     # Extraire les informations temporelles
-    df["Jour"] = df["datetime"].dt.day.astype("Int64")
-    df["Mois"] = df["datetime"].dt.month.astype("Int64")
-    df["Année"] = df["datetime"].dt.year.astype("Int64")
+    df["Jour"] = df["datetime"].dt.day
+    df["Mois"] = df["datetime"].dt.month
+    df["Année"] = df["datetime"].dt.year
 
     # Supprimer les colonnes d'origine si demandé
 
@@ -438,8 +440,6 @@ def encoded_categorical_features(x_train):
     x_train["insee_med_living_level"] = x_train["insee_med_living_level"].astype(float)
     x_train["insee_%_ind"] = x_train["insee_%_ind"].astype(float)
     x_train["insee_%_const"] = x_train["insee_%_const"].astype(float)
-
-    x_train = extract_date_features(x_train, "piezo_station_update_date")
 
     x_train["piezo_measurement_date"] = pd.to_datetime(
         x_train["piezo_measurement_date"]
